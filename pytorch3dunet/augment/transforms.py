@@ -423,7 +423,7 @@ class LabelToAffinities(AbstractLabelToBoundary):
     """
 
     def __init__(self, offsets, ignore_index=None, append_label=False, aggregate_affinities=False, z_offsets=None,
-                 **kwargs):
+                 is2d=False, **kwargs):
         super().__init__(ignore_index=ignore_index, append_label=append_label,
                          aggregate_affinities=aggregate_affinities)
 
@@ -442,7 +442,9 @@ class LabelToAffinities(AbstractLabelToBoundary):
         for xy_offset, z_offset in zip(offsets, z_offsets):
             for axis_ind, axis in enumerate(self.AXES_TRANSPOSE):
                 final_offset = xy_offset
-                if axis_ind == 2:
+                if axis_ind == 2 and is2d:
+                    continue
+                elif axis_ind == 2:
                     final_offset = z_offset
                 # create kernels for a given offset in every direction
                 self.kernels.append(self.create_kernel(axis, final_offset))
@@ -534,10 +536,10 @@ class FlyWingBoundary:
 
 
 class LabelToMaskAndAffinities:
-    def __init__(self, xy_offsets, z_offsets, append_label=False, background=0, ignore_index=None, **kwargs):
+    def __init__(self, xy_offsets, z_offsets, append_label=False, background=0, ignore_index=None, is2d=False, **kwargs):
         self.background = background
         self.l2a = LabelToAffinities(offsets=xy_offsets, z_offsets=z_offsets, append_label=append_label,
-                                     ignore_index=ignore_index)
+                                     ignore_index=ignore_index, is2d=is2d)
 
     def __call__(self, m):
         mask = m > self.background
